@@ -1,10 +1,12 @@
 import { View, Text, StyleSheet, Pressable, ScrollView, TextInput } from 'react-native'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { FontAwesome6, Feather, Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
 import { hp, wp } from '../../helpers/common';
 import Categories from '../../components/categories';
+import { apiCall } from '../../api';
+import ImageGrid from '../../components/imageGrid';
 
 const HomeScreen = () => {
 	const { top } = useSafeAreaInsets()
@@ -12,7 +14,22 @@ const HomeScreen = () => {
 
 	const [search, setSearch] = useState("");
 	const [activeCategory, setActiveCategory] = useState(null)
+	const [images, setImages] = useState([])
 	const searchInputRef = useRef(null)
+
+	useEffect(() => {
+		fetchImages()
+	}, []);
+
+	const fetchImages = async (params = { page: 1 }, append = false) => {
+		const res = await apiCall(params)
+		if (res.success && res?.data?.hits) {
+			if (append)
+				setImages([...images, ...res.data.hits])
+			else
+				setImages([...res.data.hits])
+		}
+	}
 
 	const handleChangeCategory = (cat) => {
 		setActiveCategory(cat)
@@ -48,8 +65,14 @@ const HomeScreen = () => {
 					)}
 				</View>
 
+				{/* categories */}
 				<View style={styles.categories}>
 					<Categories activeCategory={activeCategory} handleChangeCategory={handleChangeCategory} />
+				</View>
+
+				{/* images masonry grid */}
+				<View>
+					{images.length > 0 && <ImageGrid images={images} />}
 				</View>
 			</ScrollView>
 		</View >
