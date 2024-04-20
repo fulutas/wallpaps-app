@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, Pressable, ScrollView, TextInput } from 'react-native'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { FontAwesome6, Feather, Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
@@ -7,6 +7,9 @@ import { hp, wp } from '../../helpers/common';
 import Categories from '../../components/categories';
 import { apiCall } from '../../api';
 import ImageGrid from '../../components/imageGrid';
+import { debounce } from "lodash"
+
+var page = 1
 
 const HomeScreen = () => {
 	const { top } = useSafeAreaInsets()
@@ -35,6 +38,25 @@ const HomeScreen = () => {
 		setActiveCategory(cat)
 	}
 
+	const handleSearch = (text) => {
+		setSearch(text)
+
+		if (text.length > 2) {
+			page = 1
+			setImages([])
+			fetchImages({ page, q: text })
+		}
+
+		if (text == "") {
+			page = 1
+			searchInputRef?.current?.clear()
+			setImages([])
+			fetchImages({ page })
+		}
+	}
+
+	const handleTextDebounce = useCallback(debounce(handleSearch, 400), [])
+
 	return (
 		<View style={[styles.container, { paddingTop }]}>
 			<View style={styles.header}>
@@ -52,14 +74,14 @@ const HomeScreen = () => {
 						<Feather name="search" size={24} color={theme.colors.neutral(0.4)} />
 					</View>
 					<TextInput
-						value={search}
-						onChangeText={value => setSearch(value)}
+						// value={search}
+						onChangeText={handleTextDebounce}
 						ref={searchInputRef}
 						placeholder='Search for photos...'
 						style={styles.searchInput}
 					/>
 					{search && (
-						<Pressable onPress={() => setSearch("")} style={styles.closeIcon}>
+						<Pressable onPress={() => handleSearch("")} style={styles.closeIcon}>
 							<Ionicons name="close" size={24} color={theme.colors.neutral(0.6)} />
 						</Pressable>
 					)}
