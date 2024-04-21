@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Button, Platform, ActivityIndicator, Pressable } from 'react-native'
+import { View, Text, StyleSheet, Button, Platform, ActivityIndicator, Pressable, Alert } from 'react-native'
 import React, { useState } from 'react'
 import { BlurView } from 'expo-blur'
 import { hp, wp } from '../../helpers/common'
@@ -7,13 +7,18 @@ import { Image } from 'expo-image'
 import { theme } from '../../constants/theme'
 import { Entypo, Octicons } from '@expo/vector-icons'
 import Animated, { FadeInDown } from 'react-native-reanimated'
+import * as FileSystem from 'expo-file-system'
 
 const ImageScreen = () => {
 	const router = useRouter()
 	const item = useLocalSearchParams()
 	const [status, setStatus] = useState("loading");
 
-	let url = item?.webformatURL
+	let uri = item?.webformatURL
+
+	const fileName = item?.previewURL?.split("/").pop()
+	const imageUrl = uri
+	const filePath = `${FileSystem.documentDirectory}${fileName}`
 
 	const getSize = () => {
 		const aspectRatio = item?.imageWidth / item?.imageHeight
@@ -38,11 +43,28 @@ const ImageScreen = () => {
 	}
 
 	const handleDownloadImage = async () => {
+		setStatus("downloading")
+		let uri = await downloadFile()
 
+		if(uri) console.log("image downloaded!!!!!!!")
 	}
 
 	const handleShareImage = async () => {
 
+	}
+
+	const downloadFile = async () => {
+		try {
+			const { uri } = await FileSystem.downloadAsync(imageUrl, filePath)
+			setStatus("")
+			console.log("downloaded file", uri)
+			return uri
+		} catch (error) {
+			console.log("download file error", error.message)
+			setStatus("")
+			Alert.alert("Image", error.message)
+			return null
+		}
 	}
 
 	return (
@@ -58,7 +80,7 @@ const ImageScreen = () => {
 				<Image
 					transition={100}
 					style={[styles.image, getSize()]}
-					source={url}
+					source={uri}
 					onLoad={onLoad}
 				/>
 			</View>
@@ -69,9 +91,15 @@ const ImageScreen = () => {
 					</Pressable>
 				</Animated.View>
 				<Animated.View entering={FadeInDown.springify().delay(100)}>
-					<Pressable style={styles.button} onPress={handleDownloadImage}>
-						<Octicons name="download" size={24} color="white" />
-					</Pressable>
+					{status == "downloading" ? (
+						<View style={styles.button}>
+							<ActivityIndicator size="small" color="white" />
+						</View>
+					) : (
+						<Pressable style={styles.button} onPress={handleDownloadImage}>
+							<Octicons name="download" size={24} color="white" />
+						</Pressable>
+					)}
 				</Animated.View>
 				<Animated.View entering={FadeInDown.springify().delay(200)}>
 					<Pressable style={styles.button} onPress={handleShareImage}>
