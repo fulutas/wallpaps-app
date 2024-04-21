@@ -9,11 +9,14 @@ import { apiCall } from '../../api';
 import ImageGrid from '../../components/imageGrid';
 import { debounce } from "lodash"
 import FiltersModal from '../../components/filtersModal';
+import { useRouter } from 'expo-router';
 
 var page = 1
 
 const HomeScreen = () => {
 	const { top } = useSafeAreaInsets()
+	const router = useRouter()
+
 	const paddingTop = top > 0 ? top + 10 : 30
 
 	const [search, setSearch] = useState("");
@@ -252,7 +255,7 @@ const HomeScreen = () => {
 
 				{/* images masonry grid */}
 				<View>
-					{images.length > 0 && <ImageGrid images={images} />}
+					{images.length > 0 && <ImageGrid images={images} router={router} />}
 				</View>
 
 				{/* loading */}
