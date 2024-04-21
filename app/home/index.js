@@ -16,30 +16,29 @@ const HomeScreen = () => {
 	const { top } = useSafeAreaInsets()
 	const paddingTop = top > 0 ? top + 10 : 30
 
-	const [isLoading, setIsLoading] = useState(false);
 	const [search, setSearch] = useState("");
 	const [activeCategory, setActiveCategory] = useState(null)
 	const [filters, setFilters] = useState(null)
 	const [images, setImages] = useState([])
+	const [isEndReached, setIsEndReached] = useState(false)
+
 	const searchInputRef = useRef(null)
 	const modalRef = useRef(null)
+	const scrollRef = useRef(null)
 
 	useEffect(() => {
 		fetchImages()
 	}, []);
 
-	const fetchImages = async (params = { page: 1 }, append = false) => {
+	const fetchImages = async (params = { page: 1 }, append = true) => {
 		const res = await apiCall(params)
-		setIsLoading(true)
 		if (res.success && res?.data?.hits) {
-			setIsLoading(false)
 			if (append)
 				setImages([...images, ...res.data.hits])
 			else
 				setImages([...res.data.hits])
 		}
 	}
-	console.log("isLoading", isLoading)
 	const openFiltersModal = () => {
 		modalRef?.current?.present()
 	}
@@ -144,6 +143,42 @@ const HomeScreen = () => {
 		searchInputRef?.current?.clear()
 	}
 
+	const handleScroll = (event) => {
+		const contentHeight = event.nativeEvent.contentSize.height
+		const scrollViewHeight = event.nativeEvent.layoutMeasurement.height
+		const scrollOffset = event.nativeEvent.contentOffset.y
+		const bottomPosition = contentHeight - scrollViewHeight
+
+		if (scrollOffset >= bottomPosition - 1) {
+			// reached the bottom of scrollview
+			if (!isEndReached) {
+				setIsEndReached(true)
+				console.log("reached the bottom of scrollview")
+
+				++page
+
+				let params = {
+					page,
+					...filters
+				}
+
+				if (activeCategory) params.category = activeCategory
+				if (search) params.q = search
+
+				fetchImages(params)
+			}
+		} else if (isEndReached) {
+			setIsEndReached(false)
+		}
+	}
+
+	const handleScrollUp = () => {
+		scrollRef?.current?.scrollTo({
+			y: 0,
+			animated: true
+		})
+	}
+
 	const handleTextDebounce = useCallback(debounce(handleSearch, 400), [])
 
 	console.log("selectedFilter;", filters)
@@ -151,7 +186,7 @@ const HomeScreen = () => {
 	return (
 		<View style={[styles.container, { paddingTop }]}>
 			<View style={styles.header}>
-				<Pressable>
+				<Pressable onPress={handleScrollUp}>
 					<Text style={styles.title}>Wallpaps</Text>
 				</Pressable>
 				<Pressable onPress={openFiltersModal}>
@@ -159,7 +194,11 @@ const HomeScreen = () => {
 				</Pressable>
 			</View>
 
-			<ScrollView contentContainerStyle={{ gap: 15 }}>
+			<ScrollView
+				onScroll={handleScroll}
+				scrollEventThrottle={5}
+				ref={scrollRef}
+				contentContainerStyle={{ gap: 15 }}>
 				<View style={styles.searchBar}>
 					<View style={styles.searchIcon}>
 						<Feather name="search" size={24} color={theme.colors.neutral(0.4)} />
@@ -217,11 +256,9 @@ const HomeScreen = () => {
 				</View>
 
 				{/* loading */}
-				{isLoading && (
-					<View style={{ marginBottom: 70, marginTop: images.length > 0 ? 10 : 70 }}>
-						<ActivityIndicator size="large" />
-					</View>
-				)}
+				<View style={{ marginBottom: 70, marginTop: images.length > 0 ? 10 : 70 }}>
+					<ActivityIndicator size="large" />
+				</View>
 
 			</ScrollView>
 

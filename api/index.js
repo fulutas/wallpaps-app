@@ -5,7 +5,7 @@ const API_KEY = "43456894-31a58b765c64e6416a976fcd6"
 const apiUrl = `https://pixabay.com/api/?key=${API_KEY}`
 
 const formatUrl = (params) => {
-    let url = apiUrl + "&per_page=50&safesearch=true&editors_choice=true"
+    let url = apiUrl + "&per_page=25&safesearch=true&editors_choice=true"
 
     if (!params) return url
 
