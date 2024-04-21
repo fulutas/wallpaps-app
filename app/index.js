@@ -5,13 +5,14 @@ import { LinearGradient } from 'expo-linear-gradient'
 import Animated, { FadeInDown } from "react-native-reanimated"
 import { theme } from "../constants/theme"
 import { useRouter } from "expo-router"
+import CustomStatusBar from '../components/customStatusBar'
 
 const WelcomeScreen = () => {
 	const router = useRouter()
 
 	return (
 		<View style={styles.container}>
-			<StatusBar style="light" />
+			<CustomStatusBar />
 			<Image
 				source={require("../assets/images/welcome.png")}
 				style={styles.bgImage}

@@ -9,6 +9,7 @@ import { Entypo, Octicons } from '@expo/vector-icons'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import * as FileSystem from 'expo-file-system'
 import * as Sharing from 'expo-sharing'
+import * as MediaLibrary from 'expo-media-library';
 import Toast from "react-native-toast-message"
 
 const ImageScreen = () => {
@@ -65,14 +66,47 @@ const ImageScreen = () => {
 	const downloadFile = async () => {
 		try {
 			const { uri } = await FileSystem.downloadAsync(imageUrl, filePath)
+			
 			setStatus("")
-			console.log("downloaded file", uri)
+			saveFile(uri)
+
 			return uri
 		} catch (error) {
 			console.log("download file error", error.message)
 			setStatus("")
 			Alert.alert("Image", error.message)
 			return null
+		}
+	}
+
+	// Adds to Device Media
+	const saveFile = async (fileUri) => {
+		const { status } = await MediaLibrary.requestPermissionsAsync()
+
+		if (status === "granted") {
+			try {
+				const asset = await MediaLibrary.createAssetAsync(fileUri);
+				const album = await MediaLibrary.getAlbumAsync('Download');
+
+				if (album == null) {
+					await MediaLibrary.createAlbumAsync('Download', asset, false);
+				} else {
+					await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+				}
+			} catch (err) {
+				Toast.show({
+					type: "error",
+					text1: "An unexpected error has occurred.",
+					position: "bottom"
+				})
+				console.log("Save err: ", err)
+			}
+		} else if (status === "denied") {
+			Toast.show({
+				type: "info",
+				text1: "Please allow permissions to download.",
+				position: "bottom"
+			})
 		}
 	}
 
