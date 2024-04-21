@@ -212,6 +212,7 @@ const HomeScreen = () => {
 						ref={searchInputRef}
 						placeholder='Search for photos...'
 						style={styles.searchInput}
+						placeholderTextColor={theme.colors.neutral(0.4)}
 					/>
 					{search && (
 						<Pressable onPress={() => handleSearch("")} style={styles.closeIcon}>
@@ -311,6 +312,7 @@ const styles = StyleSheet.create({
 	},
 	searchInput: {
 		flex: 1,
+		color : theme.colors.neutral(0.7),
 		borderRadius: theme.radius.sm,
 		paddingVertical: 10,
 		fontSize: hp(1.8)
