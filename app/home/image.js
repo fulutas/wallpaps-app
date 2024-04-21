@@ -29,7 +29,7 @@ const ImageScreen = () => {
 
 		return {
 			width: calculatedWidth,
-			height: calculatedHeights
+			height: calculatedHeight
 		}
 	}
 
